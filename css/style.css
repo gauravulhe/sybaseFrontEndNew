@@ -1,0 +1,22 @@
+/* css for error message  */
+.form-box .col-sm-8 span {
+	color: red;
+}
+
+/* css for company name  */
+.form-box .col-sm-8 p {
+	font-size: 1em;
+}
+
+table tr td span{
+	color: red;	
+	background-color: #800000;
+}
+
+.content .col-md-12 .box-body table tr td span{
+	color: red;
+}
+
+.dashboard{
+	height: 500px;
+}

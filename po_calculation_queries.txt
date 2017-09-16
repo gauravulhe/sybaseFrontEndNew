@@ -1,0 +1,1391 @@
+
+
+        variable j int, tag int, upd tinyint, i int
+
+        variable tab1 char(15), tab2 char(15),srv_amt float,exc_amt float
+
+        global variable Gusername char(30),
+
+                        Gpassword char(30)
+
+        global variable Gusr_id  float
+
+        variable c_tab1 char(25), c_tab2 char(25), c_tab3 char(25)
+
+        ffmesg = null
+
+ 
+
+        if ffpfile is NULL
+
+        begin
+
+            ffmesg = "Kindly Enter File Name .. "
+
+            positionform $curfield
+
+            return
+
+        end
+
+ 
+
+        ffmesg = "Processing in PROGRESS...Wait !"
+
+ 
+
+        submit
+
+        sqlbegin
+
+            select ffdbn=com_dbf from catalog.dbo.comcat
+
+            where com_com={com}
+
+            and   com_unit={unit}
+
+        sqlend
+
+ 
+
+        submit local
+
+        sqlbegin
+
+            SELECT tab1 = "pprt" +
+
+                          ltrim(convert(char(4),convert(int,{Gusr_id}))),
+
+                   tab2 = "pprt1" +
+
+                          ltrim(convert(char(4),convert(int,{Gusr_id})))
+
+        sqlend
+
+ 
+
+        submit
+
+        sqlbegin
+
+        if exists (select * from tempdb..sysobjects
+
+                   where name='{tab1}')
+
+                   drop table tempdb..{tab1}
+
+ 
+
+        if exists (select * from tempdb..sysobjects
+
+                   where name='{tab2}')
+
+                   drop table tempdb..{tab2}
+
+        sqlend
+
+ 
+
+        submit
+
+        sqlbegin
+
+          create table tempdb..{tab1}
+
+          ( com              tinyint     not null,
+
+            unit             tinyint     not null,
+
+            year             smallint    not null,
+
+            posupcd          char(6)     not null,
+
+            pono             float       not null,
+
+            podt             datetime    not null,
+
+            posrl            int         default 0,
+
+            poupdtag         tinyint     null,
+
+            inqotno          char(55)    null,
+
+            poitem           char(7)     not null,
+
+            poqty            float       default 0,
+
+            porate           float       default 0,
+
+            irate            float       default 0,
+
+            techdesc         varchar(240) null,
+
+            stax_cd          float       default 0,
+
+            stax_per         float       default 0,
+
+            excise_cd        float       default 0,
+
+            excise_rate      float       default 0,
+
+            iname            char(60)    not null,
+
+            itm_uom          tinyint     not null,
+
+            excise_amt       float       null,
+
+            ins_amt          float       null,
+
+            frt_amt          float       null,
+
+            stax_amt         float       null,
+
+            load_amt         float       null,
+
+            pack_amt         float       null,
+
+            comm_amt         float       null,
+
+            poh_disc         float       null,
+
+            disc_amt         float       null,
+
+            others           float       null,
+
+            scharg           float       null,
+
+            tcharg           float       null,
+
+            payterm          char(34)    null,
+
+            req_no           float       null,
+
+            req_dt           datetime    null,
+
+            req_fyr          smallint    null,
+
+            req_unit         tinyint     null,
+
+            pdd_sch_dt1      datetime    null,
+
+            pdd_stag_qty1    float       null,
+
+            pdd_sch_dt2      datetime    null,
+
+            pdd_stag_qty2    float       null,
+
+            pdd_sch_dt3      datetime    null,
+
+            pdd_stag_qty3    float       null,
+
+            pdd_amen         char(20)    null,
+
+            pdd_anix         char(20)    null,
+
+            cess_amt         float       null,
+
+            serv_amt         float       null,
+
+            hsec_amt         float       null,
+
+            crdys            smallint    default 0,
+
+            addlrmk          vchar50     null,
+
+            sbcess_amt       float       default 0,
+
+            kkcess_amt       float       default 0,
+
+            total            float       default 0
+
+            )
+
+     sqlend
+
+        submit
+
+        sqlbegin
+
+            alter table tempdb..{tab1} add  gst_cd     float       null
+
+            alter table tempdb..{tab1} add  gst_per    float       null
+
+            alter table tempdb..{tab1} add  gst_amt    float       null
+
+            alter table tempdb..{tab1} add  igst_per   float       null
+
+            alter table tempdb..{tab1} add  igst_amt   float       null
+
+            alter table tempdb..{tab1} add  sgst_per   float       null
+
+            alter table tempdb..{tab1} add  sgst_amt   float       null
+
+            alter table tempdb..{tab1} add  cgst_per   float       null
+
+            alter table tempdb..{tab1} add  cgst_amt   float       null
+
+            alter table tempdb..{tab1} add  ugst_per   float       null
+
+            alter table tempdb..{tab1} add  ugst_amt   float       null
+
+            alter table tempdb..{tab1} add  chpt_id    tinyint     null
+
+            alter table tempdb..{tab1} add  chpt_head  char(8)     null
+
+        sqlend
+
+ 
+
+ /************INSERT RECORD IN TO TMP TABLES ***********************/
+
+        SUBMIT
+
+        SQLBEGIN
+
+            insert into tempdb..{tab1}
+
+            (com, unit, year, posupcd, pono, podt, posrl, poitem, poqty,
+
+             porate, irate, techdesc, stax_cd, stax_per, excise_cd,
+
+             excise_rate, iname, itm_uom, excise_amt, ins_amt, frt_amt,
+
+             stax_amt, load_amt, pack_amt, comm_amt,poh_disc, disc_amt,
+
+             others, scharg,tcharg,payterm, req_no, req_dt, req_fyr,req_unit,
+
+             pdd_anix, cess_amt, serv_amt, hsec_amt, pdd_amen , poupdtag, crdys,
+
+             addlrmk,gst_cd,gst_per,gst_amt,igst_per,igst_amt,sgst_per,sgst_amt,
+
+             cgst_per, cgst_amt, ugst_per, ugst_amt, chpt_id, chpt_head)
+
+            select  pod_com, pod_unit, pod_fyr, poh_supcd, pod_po_no,
+
+                 poh_po_dt, pod_po_srl, pod_item, pod_ord_qty, pod_rate,
+
+                 pod_ord_qty*pod_rate, pod_tech_spec, poh_stax_cd,
+
+                 poh_stax_per, poh_excise_cd, exc_rate,
+
+                 itm_desc+itm_part,  itm_uom,
+
+                 0, 0, 0, 0, 0, 0, 0, poh_disc, 0,
+
+                 0, 0,0,poh_pmnt_terms, 0, ' ', 0,0,' ',0, 0,0,' ',poh_upd_tag,
+
+                 poh_paycr_days, poh_addl_rmk,
+
+                 poh_gst_cd, poh_gst_per, 0,
+
+                 poh_igst_per, 0, poh_sgst_per, 0, poh_cgst_per, 0,
+
+                 poh_ugst_per, 0, pod_chpt_id, null
+
+          from  {ffdbn}.invac.podet, {ffdbn}.invac.pohdr,catalog.dbo.excrate,
+
+          catalog.dbo.itmcat
+
+          where pod_com={com}
+
+          and   pod_unit={unit}
+
+          and   pod_fyr={ffyr}
+
+          and   pod_po_no between {po1} and {po2}
+
+         -- and   pod_po_no = {po1}
+
+          and   (pod_ord_qty-pod_can_qty) >0
+
+          and   pod_po_no=poh_po_no
+
+          and   pod_com=poh_com
+
+          and   pod_unit=poh_unit
+
+          and   pod_fyr=poh_fyr
+
+          and   poh_excise_cd=exc_code
+
+          and   pod_item=itm_item
+
+          order by pod_po_srl, pod_po_no
+
+      SQLEND
+
+ 
+
+                submit
+
+                sqlbegin
+
+                update tempdb..{tab1}
+
+                set a.req_no = b.pdr_req_no,
+
+                    a.req_fyr= b.pdr_req_fyr,
+
+                    a.req_unit=b.pdr_unit
+
+                from tempdb..{tab1} a,
+
+                {ffdbn}.invac.pdreq b
+
+                where a.pono= b.pdr_po_no
+
+                and   a.unit=b.pdr_unit
+
+                and   a.year= b.pdr_fyr
+
+                and   a.posrl=b.pdr_po_srl
+
+                sqlend
+
+ 
+
+                submit
+
+                sqlbegin
+
+                update tempdb..{tab1}
+
+                set a.req_dt = b.req_dt
+
+                from tempdb..{tab1} a,catalog..request b
+
+                where a.req_no =b.req_no
+
+                and   a.req_unit=b.req_unit
+
+                and   a.com     =b.req_com
+
+                and   a.req_fyr =b.req_fyr
+
+                sqlend
+
+ 
+
+  /********************QUOTATION NO UPDATE *********************/
+
+                submit
+
+                sqlbegin
+
+                update tempdb..{tab1}
+
+                set inqotno  = {sqlexpr(ffqtono)}
+
+                sqlend
+
+ 
+
+  /********************AMANDMENT  DETAIL *********************/
+
+        submit local
+
+        sqlbegin
+
+            SELECT upd =  poupdtag from tempdb..{tab1}
+
+        sqlend
+
+ 
+
+              submit
+
+              sqlbegin
+
+                update tempdb..{tab1}
+
+                set  pdd_amen =  "AMMENDED" + " P"
+
+                  from  {ffdbn}.invac.pohdr a, {ffdbn}.invac.pohdr_del b
+
+                  where a.poh_unit = b.poh_unit
+
+                  and a.poh_fyr    = b.poh_fyr
+
+                  and a.poh_po_no  = b.poh_po_no
+
+                  and a.poh_supcd != b.poh_supcd
+
+                  and a.poh_unit   = {unit}
+
+                  and a.poh_fyr    = {ffyr}
+
+                  and a.poh_po_no  = {po1}
+
+ 
+
+                update tempdb..{tab1}
+
+                set  pdd_amen =  "AMMENDED" + " S"
+
+                  from  {ffdbn}.invac.pohdr a, {ffdbn}.invac.pohdr_del b
+
+                  where a.poh_unit = b.poh_unit
+
+                  and a.poh_fyr    = b.poh_fyr
+
+                  and a.poh_po_no  = b.poh_po_no
+
+                  and a.poh_stax_cd != b.poh_stax_cd
+
+                  and a.poh_unit   = {unit}
+
+                  and a.poh_fyr    = {ffyr}
+
+                  and a.poh_po_no  = {po1}
+
+ 
+
+                update tempdb..{tab1}
+
+                set  pdd_amen =  "AMMENDED" + " D"
+
+                  from  {ffdbn}.invac.pohdr a, {ffdbn}.invac.pohdr_del b
+
+                  where a.poh_unit = b.poh_unit
+
+                  and a.poh_fyr    = b.poh_fyr
+
+                  and a.poh_po_no  = b.poh_po_no
+
+                  and a.poh_disc  != b.poh_disc
+
+                  and a.poh_unit   = {unit}
+
+                  and a.poh_fyr    = {ffyr}
+
+                  and a.poh_po_no  = {po1}
+
+ 
+
+                update tempdb..{tab1}
+
+                set  pdd_amen =  "AMMENDED" + " E"
+
+                  from  {ffdbn}.invac.pohdr a, {ffdbn}.invac.pohdr_del b
+
+                  where a.poh_unit = b.poh_unit
+
+                  and a.poh_fyr    = b.poh_fyr
+
+                  and a.poh_po_no  = b.poh_po_no
+
+                  and a.poh_excise_cd != b.poh_excise_cd
+
+                  and a.poh_unit   = {unit}
+
+                  and a.poh_fyr    = {ffyr}
+
+                  and a.poh_po_no  = {po1}
+
+ 
+
+                update tempdb..{tab1}
+
+                set  pdd_amen =  "AMMENDED" + " R"
+
+                  from  {ffdbn}.invac.podet a, {ffdbn}.invac.podet_del b
+
+                  where a.pod_unit = b.pod_unit
+
+                  and a.pod_fyr    = b.pod_fyr
+
+                  and a.pod_po_no  = b.pod_po_no
+
+                  and a.pod_po_srl = b.pod_po_srl
+
+                  and a.pod_rate  != b.pod_rate
+
+                  and a.pod_unit   = {unit}
+
+                  and a.pod_fyr    = {ffyr}
+
+                  and a.pod_po_no  = {po1}
+
+ 
+
+                update tempdb..{tab1}
+
+                set  pdd_amen =  "AMMENDED" + " I"
+
+                  from  {ffdbn}.invac.podet a, {ffdbn}.invac.podet_del b
+
+                  where a.pod_unit = b.pod_unit
+
+                  and a.pod_fyr    = b.pod_fyr
+
+                  and a.pod_po_no  = b.pod_po_no
+
+                  and a.pod_po_srl = b.pod_po_srl
+
+                  and a.pod_item  != b.pod_item
+
+                  and a.pod_unit   = {unit}
+
+                  and a.pod_fyr    = {ffyr}
+
+                  and a.pod_po_no  = {po1}
+
+ 
+
+                update tempdb..{tab1}
+
+                set  pdd_amen =  "AMMENDED" + " Q"
+
+                  from  {ffdbn}.invac.podet a, {ffdbn}.invac.podet_del b
+
+                  where a.pod_unit = b.pod_unit
+
+                  and a.pod_fyr    = b.pod_fyr
+
+                  and a.pod_po_no  = b.pod_po_no
+
+                  and a.pod_po_srl = b.pod_po_srl
+
+                  and a.pod_ord_qty  != b.pod_ord_qty
+
+                  and a.pod_unit   = {unit}
+
+                  and a.pod_fyr    = {ffyr}
+
+                  and a.pod_po_no  = {po1}
+
+ 
+
+              sqlend
+
+  /********************SCHADULE DETAIL *********************/
+
+        submit
+
+        sqlbegin
+
+        select pdd_po_no, pdd_po_srl,
+
+               pdd_sch_dt=convert(datetime, b.pdd_sch_dt), pdd_stag_qty
+
+        from tempdb..{tab1} a,{ffdbn}.invac.pddet b
+
+        where a.unit   = b.pdd_unit
+
+        and   a.pono   = b.pdd_po_no
+
+        and   a.year   = b.pdd_fyr
+
+        and   a.posrl  = b.pdd_po_srl
+
+        order by pdd_po_no, pdd_po_srl
+
+        sqlend
+
+ 
+
+        j = (pddgrp:used)
+
+        tag = 0
+
+        if j > 3
+
+        begin
+
+           i=2
+
+        end
+
+        else
+
+        begin
+
+           i=j-1
+
+        end
+
+ 
+
+        j=0
+
+            while j <= i
+
+            begin
+
+              submit
+
+              sqlbegin
+
+                update tempdb..{tab1}
+
+                set pdd_sch_dt{j+1} = convert(smalldatetime,
+
+                                        {sqlexpr(pddgrp[j].pdd_sch_dt)}),
+
+                    pdd_stag_qty{j+1} = convert(numeric(10,3),
+
+                                        {pddgrp[j].pdd_stag_qty})
+
+                where pono  = {pddgrp[j].pdd_po_no}
+
+                and   posrl = 01
+
+              sqlend
+
+                j = j +1
+
+            end
+
+        /*else*/
+
+ 
+
+        if j=0
+
+        begin
+
+             tag = 1
+
+             submit
+
+             sqlbegin
+
+             update tempdb..{tab1}
+
+             set pdd_anix = "AS PER ANNEXURE "
+
+             create table tempdb..{tab2}
+
+             ( pono1     float       not null,
+
+               podt1     datetime    not null,
+
+               posrl1    int         default 0,
+
+               poitem1   char(7)     not null,
+
+               iname1    char(65)    not null,
+
+               schdt1    smalldatetime null,
+
+               stagqty1  float       null
+
+             )
+
+ 
+
+             sqlend
+
+ 
+
+             j=0
+
+             while j <= (pddgrp:used) - 1
+
+             begin
+
+                submit
+
+                sqlbegin
+
+                insert into tempdb..{tab2}
+
+                select pono1     = pono,
+
+                       podt1     = podt,
+
+                       posrl1    = {pddgrp[j].pdd_po_srl},
+
+                       poitem1   = poitem,
+
+                       iname1    = iname,
+
+                       schdt1    = convert(smalldatetime,
+
+                                        {sqlexpr(pddgrp[j].pdd_sch_dt)}),
+
+                       stagqty1  = {pddgrp[j].pdd_stag_qty}
+
+                from  tempdb..{tab1}
+
+                where pono    = {pddgrp[j].pdd_po_no}
+
+                and   posrl   = {pddgrp[j].pdd_po_srl}
+
+                sqlend
+
+                j = j +1
+
+             end
+
+        end
+
+ 
+
+ 
+
+        /* no use */
+
+        /*
+
+        submit
+
+        sqlbegin
+
+             update tempdb..{tab1}
+
+             set pdd_anix = "AS PER ANNEXURE "
+
+             sqlend
+
+ 
+
+        submit
+
+        sqlbegin
+
+        select pono1=a.pono, podt1=a.podt,posrl1=a.posrl,
+
+               poitem1=a.poitem,iname1=a.iname,
+
+               schdt1=convert(datetime, b.pdd_sch_dt),
+
+               stagqty1=b.pdd_stag_qty into tempdb..{tab2}
+
+        from tempdb..{tab1} a,{ffdbn}.invac.pddet b
+
+        where a.unit   = b.pdd_unit
+
+        and   a.pono   = b.pdd_po_no
+
+        and   a.year   = b.pdd_fyr
+
+        and   a.posrl  = b.pdd_po_srl
+
+        order by pdd_po_no, pdd_po_srl
+
+        sqlend
+
+        */
+
+        /* end of no use statement */
+
+ 
+
+ 
+
+/*DISCOUNT FOR EXCISE, STAX CALCULATION PURPOSE ONLY */
+
+ 
+
+        submit
+
+        sqlbegin
+
+                update tempdb..{tab1}
+
+                set disc_amt = (irate*poh_disc)/100 from tempdb..{tab1}
+
+        sqlend
+
+ 
+
+        SUBMIT
+
+        SQLBEGIN
+
+                update tempdb..{tab1}
+
+                set pack_amt = pdc_amt
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono   =  pdc_po_no
+
+                and   posrl  =  pdc_po_srl
+
+                and   pdc_id =  30
+
+                and   com    =  pdc_com
+
+                and   unit   =  pdc_unit
+
+                and   year   =  pdc_fyr
+
+        SQLEND
+
+ 
+
+/* EXCISE AMTOUNT CAL. */
+
+        SUBMIT
+
+        SQLBEGIN
+
+                update tempdb..{tab1}
+
+                set excise_amt = (irate+pack_amt-(disc_amt)) * excise_rate /100
+
+                where excise_cd not in ( 49, 78 )
+
+        SQLEND
+
+/************ SERVICE TAX  ADDITION ************/
+
+ 
+
+        submit
+
+        sqlbegin
+
+            update tempdb..{tab1}
+
+            set sbcess_amt = (irate-disc_amt) * pdc_amt / 100
+
+            from tempdb..{tab1}, {ffdbn}.invac.pdcomm
+
+            where pono        =  pdc_po_no
+
+            and   pdc_id      =  89
+
+            and   pdc_po_srl  =  01
+
+            and   com         =  pdc_com
+
+            and   unit        =  pdc_unit
+
+            and   year        =  pdc_fyr
+
+         SQLEND
+
+ 
+
+        submit
+
+        sqlbegin
+
+            update tempdb..{tab1}
+
+            set kkcess_amt = (irate-disc_amt) * pdc_amt / 100
+
+            from tempdb..{tab1}, {ffdbn}.invac.pdcomm
+
+            where pono        =  pdc_po_no
+
+            and   pdc_id      =  88
+
+            and   pdc_po_srl  =  01
+
+            and   com         =  pdc_com
+
+            and   unit        =  pdc_unit
+
+            and   year        =  pdc_fyr
+
+         SQLEND
+
+ 
+
+        SUBMIT
+
+        SQLBEGIN
+
+                update tempdb..{tab1}
+
+                set serv_amt =  (irate+pack_amt-disc_amt) * pdc_amt /100
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono        =  pdc_po_no
+
+                and   pdc_id      =  93
+
+                and   pdc_po_srl  =  01
+
+                and   pdc_tag    !=  02
+
+                and   com         =  pdc_com
+
+                and   unit        =  pdc_unit
+
+                and   year        =  pdc_fyr
+
+         SQLEND
+
+ 
+
+        /**** add asc 07-06-2016 ****/
+
+        SUBMIT
+
+        SQLBEGIN
+
+                update tempdb..{tab1}
+
+                set serv_amt = serv_amt + pdc_amt
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono        =  pdc_po_no
+
+                and   pdc_id      =  93
+
+                and   pdc_po_srl  =  01
+
+                and   pdc_tag     =  02
+
+                and   com         =  pdc_com
+
+                and   unit        =  pdc_unit
+
+                and   year        =  pdc_fyr
+
+                and   posrl       =  pdc_po_srl
+
+         SQLEND
+
+ 
+
+         submit local
+
+         sqlbegin
+
+         select srv_amt = serv_amt,exc_amt = excise_amt
+
+                from tempdb..{tab1}
+
+         sqlend
+
+/************ CESS TAX ON EXCISE ADDITION ************/
+
+        if exc_amt > 0
+
+        begin
+
+         SUBMIT
+
+         SQLBEGIN
+
+                update tempdb..{tab1}
+
+                set cess_amt = (excise_amt*pdc_amt/100)
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono        =  pdc_po_no
+
+                and   pdc_id      =  92
+
+                and   pdc_po_srl  =  01
+
+                and   com         =  pdc_com
+
+                and   unit        =  pdc_unit
+
+                and   year        =  pdc_fyr
+
+         SQLEND
+
+ 
+
+         SUBMIT
+
+         SQLBEGIN
+
+                 update tempdb..{tab1}
+
+                 set hsec_amt = (excise_amt*pdc_amt/100)
+
+                 from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                 where pono        =  pdc_po_no
+
+                 and   pdc_id      =  97
+
+                 and   pdc_po_srl  =  01
+
+                 and   com         =  pdc_com
+
+                 and   unit        =  pdc_unit
+
+                 and   year        =  pdc_fyr
+
+          SQLEND
+
+         end
+
+         else
+
+/************ CESS TAX ON SERV.CHRG ADDITION ************/
+
+         if srv_amt > 0
+
+         begin
+
+         SUBMIT
+
+         SQLBEGIN
+
+                update tempdb..{tab1}
+
+                set cess_amt =  (serv_amt*pdc_amt/100)
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono        =  pdc_po_no
+
+                and   pdc_id      =  92
+
+                and   pdc_po_srl  =  01
+
+                and   com         =  pdc_com
+
+                and   unit        =  pdc_unit
+
+                and   year        =  pdc_fyr
+
+         SQLEND
+
+ 
+
+         SUBMIT
+
+         SQLBEGIN
+
+                 update tempdb..{tab1}
+
+                 set hsec_amt = (serv_amt*pdc_amt/100)
+
+                 from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                 where pono        =  pdc_po_no
+
+                 and   pdc_id      =  97
+
+                 and   pdc_po_srl  =  01
+
+                 and   com         =  pdc_com
+
+                 and   unit        =  pdc_unit
+
+                 and   year        =  pdc_fyr
+
+          SQLEND
+
+         end
+
+/******************insurance charges *******/
+
+         SUBMIT
+
+         SQLBEGIN
+
+                update tempdb..{tab1}
+
+                set ins_amt = (irate*pdc_amt/100)
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono        =  pdc_po_no
+
+                and   pdc_id      =  91
+
+                and   pdc_po_srl  =  01
+
+                and   com         =  pdc_com
+
+                and   unit        =  pdc_unit
+
+                and   year        =  pdc_fyr
+
+         SQLEND
+
+/******************insurance charges *******/
+
+        /*** BEGIN ORIGINAL
+
+        submit
+
+        sqlbegin
+
+                update tempdb..{tab1}
+
+                set excise_amt = (irate - disc_amt) * excise_rate /100
+
+                where excise_cd not in ( 49, 78 )
+
+        sqlend
+
+              END ORIGINAL **/
+
+ 
+
+/*EXCISE_AMT=(POD_ORD_QTY*POD_RATE*EXC_RATE/100)*/
+
+ 
+
+        submit
+
+        sqlbegin
+
+                update tempdb..{tab1}
+
+                set excise_amt = ( poqty * excise_rate )
+
+                where excise_cd in ( 49, 78 )
+
+        sqlend
+
+ 
+
+        submit
+
+        sqlbegin
+
+                update tempdb..{tab1}
+
+                set stax_amt = (select
+
+                    (irate +excise_amt + cess_amt + pack_amt + hsec_amt -
+
+                     disc_amt) * stax_per/100
+
+                    from tempdb..{tab1}
+
+                    where a.pono  = pono
+
+                    and   a.posrl = posrl)
+
+                from tempdb..{tab1} a
+
+        sqlend
+
+ 
+
+        /*** sbcess_amt added in cess_amt due to no space left
+
+             on pre-printed format of po ***/
+
+        submit
+
+        sqlbegin
+
+            update tempdb..{tab1}
+
+            set cess_amt = cess_amt + sbcess_amt
+
+        sqlend
+
+ 
+
+        /*** kkcess_amt added in hsec_amt due to no space left
+
+             on pre-printed format of po ***/
+
+        submit
+
+        sqlbegin
+
+            update tempdb..{tab1}
+
+            set hsec_amt = hsec_amt + kkcess_amt
+
+        sqlend
+
+ 
+
+/********FREIGHT, LOADING, OTHER, PACKING  -   COMMERCIAL DETAIL ***********/
+
+        submit
+
+        sqlbegin
+
+                update tempdb..{tab1}
+
+                set frt_amt = pdc_amt
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono   =  pdc_po_no
+
+                and   posrl  =  pdc_po_srl
+
+                and   pdc_id =  55
+
+                and   com    =  pdc_com
+
+                and   unit   =  pdc_unit
+
+                and   year   =  pdc_fyr
+
+ 
+
+                update tempdb..{tab1}
+
+                set load_amt = pdc_amt
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono   =  pdc_po_no
+
+                and   posrl  =  pdc_po_srl
+
+                and   pdc_id =  50
+
+                and   com    =  pdc_com
+
+                and   unit   =  pdc_unit
+
+                and   year   =  pdc_fyr
+
+ 
+
+                update tempdb..{tab1}
+
+                set others = pdc_amt
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono   =  pdc_po_no
+
+                and   posrl  =  pdc_po_srl
+
+                and   pdc_id =  80
+
+                and   com    =  pdc_com
+
+                and   unit   =  pdc_unit
+
+                and   year   =  pdc_fyr
+
+ 
+
+                update tempdb..{tab1}
+
+                set comm_amt = pdc_amt
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono   =  pdc_po_no
+
+                and   posrl  =  pdc_po_srl
+
+                and   pdc_id =  70
+
+                and   com    =  pdc_com
+
+                and   unit   =  pdc_unit
+
+                and   year   =  pdc_fyr
+
+/* T charge & T charge cal. */
+
+ 
+
+                update tempdb..{tab1}
+
+                set scharg = (stax_amt*pdc_amt)/100
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono   =  pdc_po_no
+
+                and   posrl  =  pdc_po_srl
+
+                and   pdc_id =  26
+
+                and   com    =  pdc_com
+
+                and   unit   =  pdc_unit
+
+                and   year   =  pdc_fyr
+
+ 
+
+                update tempdb..{tab1}
+
+                set tcharg = (irate+excise_amt+cess_amt+hsec_amt)*pdc_amt/100
+
+                from tempdb..{tab1},{ffdbn}.invac.pdcomm
+
+                where pono   =  pdc_po_no
+
+                and   posrl  =  pdc_po_srl
+
+                and   pdc_id =  36
+
+                and   com    =  pdc_com
+
+                and   unit   =  pdc_unit
+
+                and   year   =  pdc_fyr
+
+        sqlend
+
+ 
+
+        submit
+
+        sqlbegin
+
+            update tempdb..{tab1}
+
+            set chpt_head = chp_subhd1
+
+            from catalog.sales.chpthead
+
+            where chp_id = chpt_id
+
+        sqlend
+
+ 
+
+        submit
+
+        sqlbegin
+
+            update tempdb..{tab1}
+
+            set gst_amt  = ((irate-disc_amt) * gst_per)/100,
+
+                igst_amt = ((irate-disc_amt) * igst_per)/100,
+
+                sgst_amt = ((irate-disc_amt) * sgst_per)/100,
+
+                cgst_amt = ((irate-disc_amt) * cgst_per)/100,
+
+                ugst_amt = ((irate-disc_amt) * ugst_per)/100
+
+        sqlend
+
+ 
+
+        submit
+
+        sqlbegin
+
+             update tempdb..{tab1}
+
+             set disc_amt=0
+
+             where poh_disc=0
+
+        sqlend
+
+ 
+
+        submit
+
+        sqlbegin
+
+            update tempdb..{tab1}
+
+            set total = (irate+excise_amt+ins_amt+frt_amt+stax_amt+load_amt+
+
+                         pack_amt+comm_amt+others+scharg+tcharg+cess_amt+
+
+                         hsec_amt+serv_amt+igst_amt+sgst_amt+cgst_amt+
+
+                         ugst_amt)-disc_amt
+
+        sqlend
